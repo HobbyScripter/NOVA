@@ -1,0 +1,17 @@
+{
+  "name": "systemd",
+  "version": "256.7",
+  "release": "1.nova",
+  "arch": "x86_64",
+  "license": "LGPL-2.1-or-later",
+  "summary": "NOVA OS Native Package",
+  "dependencies": [
+    "glibc",
+    "libcap"
+  ],
+  "files": [
+    "/usr/bin/systemd"
+  ],
+  "install_script": "#!/bin/sh\nexit 0\n",
+  "uninstall_script": "#!/bin/sh\nexit 0\n"
+}

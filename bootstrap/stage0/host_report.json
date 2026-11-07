@@ -1,0 +1,76 @@
+{
+  "os": "Windows",
+  "os_release": "11",
+  "arch": "AMD64",
+  "python_version": "3.14.0",
+  "disk_free_gb": 598.42,
+  "disk_sufficient": true,
+  "required_tools": {
+    "git": {
+      "found": true,
+      "path": "C:\\Program Files\\Git\\cmd\\git.EXE",
+      "min_version": "2.30.0"
+    },
+    "python3": {
+      "found": true,
+      "path": "C:\\Users\\DFark\\AppData\\Local\\Microsoft\\WindowsApps\\python.EXE",
+      "min_version": "3.10.0"
+    },
+    "cmake": {
+      "found": true,
+      "path": "C:\\Program Files\\CMake\\bin\\cmake.EXE",
+      "min_version": "3.20.0"
+    }
+  },
+  "optional_tools": {
+    "gcc": {
+      "found": false,
+      "path": "",
+      "min_version": "12.0.0"
+    },
+    "clang": {
+      "found": false,
+      "path": "",
+      "min_version": "15.0.0"
+    },
+    "make": {
+      "found": false,
+      "path": "",
+      "min_version": "4.3"
+    },
+    "ninja": {
+      "found": false,
+      "path": "",
+      "min_version": "1.10.0"
+    },
+    "rustc": {
+      "found": true,
+      "path": "C:\\Users\\DFark\\.cargo\\bin\\rustc.EXE",
+      "min_version": "1.75.0"
+    },
+    "cargo": {
+      "found": true,
+      "path": "C:\\Users\\DFark\\.cargo\\bin\\cargo.EXE",
+      "min_version": "1.75.0"
+    },
+    "VBoxManage": {
+      "found": true,
+      "path": "C:\\Program Files\\Oracle\\VirtualBox\\VBoxManage.exe",
+      "min_version": "7.0.0"
+    },
+    "qemu-system-x86_64": {
+      "found": false,
+      "path": "",
+      "min_version": "7.0.0"
+    }
+  },
+  "overall_success": true,
+  "warnings": [
+    "Optionales Werkzeug 'gcc' nicht gefunden. Manche Tests/Buildschritte k\u00f6nnten eingeschr\u00e4nkt sein.",
+    "Optionales Werkzeug 'clang' nicht gefunden. Manche Tests/Buildschritte k\u00f6nnten eingeschr\u00e4nkt sein.",
+    "Optionales Werkzeug 'make' nicht gefunden. Manche Tests/Buildschritte k\u00f6nnten eingeschr\u00e4nkt sein.",
+    "Optionales Werkzeug 'ninja' nicht gefunden. Manche Tests/Buildschritte k\u00f6nnten eingeschr\u00e4nkt sein.",
+    "Optionales Werkzeug 'qemu-system-x86_64' nicht gefunden. Manche Tests/Buildschritte k\u00f6nnten eingeschr\u00e4nkt sein."
+  ],
+  "errors": []
+}

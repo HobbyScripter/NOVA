@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": "NOVA OS",
+  "version": "1.0.0-alpha1",
+  "target_architecture": "x86_64",
+  "c_library": "glibc",
+  "init_system": "systemd",
+  "package_format": "rpm",
+  "package_manager": "dnf5",
+  "components": [
+    {
+      "name": "linux-kernel",
+      "category": "kernel",
+      "version": "6.12.10",
+      "upstream_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.12.10.tar.xz",
+      "signature_url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.12.10.tar.sign",
+      "sha256": "4733e5361ca2095f76f7fba268c14d9b1c713b1cc709bc867a5146c205273a5a",
+      "license": "GPL-2.0-only WITH Linux-syscall-note",
+      "stage": "kernel",
+      "dependencies": ["gcc", "binutils", "make", "bison", "flex", "elfutils", "openssl", "zstd"]
+    },
+    {
+      "name": "glibc",
+      "category": "core",
+      "version": "2.40",
+      "upstream_url": "https://ftp.gnu.org/gnu/glibc/glibc-2.40.tar.xz",
+      "sha256": "19a76cc80eb84cf8db4b428ae8477ff26194db22ef65e6488d57864f19eed4a7",
+      "license": "LGPL-2.1-or-later",
+      "stage": "stage1",
+      "dependencies": ["linux-headers", "binutils", "gcc-core"]
+    },
+    {
+      "name": "binutils",
+      "category": "toolchain",
+      "version": "2.43.1",
+      "upstream_url": "https://ftp.gnu.org/gnu/binutils/binutils-2.43.1.tar.xz",
+      "sha256": "13f74202a3c4c51118b797a3f8f514d040a91caad3357b0e358c1395f29a4336",
+      "license": "GPL-3.0-or-later",
+      "stage": "stage1",
+      "dependencies": []
+    },
+    {
+      "name": "gcc",
+      "category": "toolchain",
+      "version": "14.2.0",
+      "upstream_url": "https://ftp.gnu.org/gnu/gcc/gcc-14.2.0/gcc-14.2.0.tar.xz",
+      "sha256": "a7b39ad44c643ba9f8a6d1fa523a14781498b8d0092c68f18c21a4f35e98f623",
+      "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
+      "stage": "stage1",
+      "dependencies": ["binutils", "gmp", "mpfr", "mpc"]
+    },
+    {
+      "name": "systemd",
+      "category": "core",
+      "version": "256.7",
+      "upstream_url": "https://github.com/systemd/systemd/archive/refs/tags/v256.7.tar.gz",
+      "sha256": "3fa9cf076b6a6bb605e7e6f83492ee71efd36f781df034346067fa1743e498c1",
+      "license": "LGPL-2.1-or-later",
+      "stage": "stage2",
+      "dependencies": ["glibc", "util-linux", "libcap", "libseccomp", "kmod", "meson", "ninja"]
+    },
+    {
+      "name": "grub",
+      "category": "boot",
+      "version": "2.12",
+      "upstream_url": "https://ftp.gnu.org/gnu/grub/grub-2.12.tar.xz",
+      "sha256": "f3c97391f60c5accbac94e9f9064be42eb55be88ea285f5e27a9fae9be2cfef9",
+      "license": "GPL-3.0-or-later",
+      "stage": "stage2",
+      "dependencies": ["glibc", "binutils", "freetype"]
+    },
+    {
+      "name": "dracut",
+      "category": "boot",
+      "version": "103",
+      "upstream_url": "https://github.com/dracut-ng/dracut-ng/archive/refs/tags/103.tar.gz",
+      "sha256": "92f75a7b6cf2bc7a1d7f62080a7863d6666ba3a681878d655fcf0d3ff71a25db",
+      "license": "GPL-2.0-or-later",
+      "stage": "stage2",
+      "dependencies": ["systemd", "kmod", "udev", "btrfs-progs", "util-linux"]
+    },
+    {
+      "name": "btrfs-progs",
+      "category": "storage",
+      "version": "6.12",
+      "upstream_url": "https://kernel.org/pub/linux/kernel/people/kdave/btrfs-progs/btrfs-progs-v6.12.tar.xz",
+      "sha256": "9b1f2e62ea69d7a049f7e4dfbf3e62fcfec19fa620f4f9dc98f5b871c4220b32",
+      "license": "GPL-2.0-only",
+      "stage": "stage2",
+      "dependencies": ["glibc", "util-linux", "e2fsprogs", "lzo", "zlib", "zstd"]
+    },
+    {
+      "name": "rpm",
+      "category": "packaging",
+      "version": "4.20.0",
+      "upstream_url": "https://github.com/rpm-software-management/rpm/archive/refs/tags/rpm-4.20.0-RELEASE.tar.gz",
+      "sha256": "5c3789ab2f46de6a147e4eb17ea3f9828555e763b6526189ef997c41eb47b85d",
+      "license": "GPL-2.0-or-later AND LGPL-2.0-or-later",
+      "stage": "stage2",
+      "dependencies": ["glibc", "popt", "sqlite", "lua", "libarchive", "openssl"]
+    },
+    {
+      "name": "libsolv",
+      "category": "packaging",
+      "version": "0.7.31",
+      "upstream_url": "https://github.com/openSUSE/libsolv/archive/refs/tags/0.7.31.tar.gz",
+      "sha256": "ce9884e60eb11cbe2d37c54157fa87aa78cb47d9539366df65f7c32726bb4d55",
+      "license": "BSD-3-Clause",
+      "stage": "stage2",
+      "dependencies": ["rpm", "zlib", "zstd"]
+    },
+    {
+      "name": "dnf5",
+      "category": "packaging",
+      "version": "5.2.7.0",
+      "upstream_url": "https://github.com/rpm-software-management/dnf5/archive/refs/tags/5.2.7.0.tar.gz",
+      "sha256": "3cb075fa05efd5817d23d8c1eeb368fa962602711fa357f833f27f2f11fc839c",
+      "license": "LGPL-2.1-or-later",
+      "stage": "stage2",
+      "dependencies": ["rpm", "libsolv", "sqlite", "fmt", "spdlog", "cpp-httplib"]
+    },
+    {
+      "name": "wayland",
+      "category": "display",
+      "version": "1.23.1",
+      "upstream_url": "https://gitlab.freedesktop.org/wayland/wayland/-/archive/1.23.1/wayland-1.23.1.tar.gz",
+      "sha256": "ec456108170c061805f63ddfdc572a1cf452f300f8aa4b32549a9b2b350618ff",
+      "license": "MIT",
+      "stage": "stage2",
+      "dependencies": ["libffi", "expat", "libxml2"]
+    },
+    {
+      "name": "wlroots",
+      "category": "display",
+      "version": "0.18.2",
+      "upstream_url": "https://gitlab.freedesktop.org/wlroots/wlroots/-/archive/0.18.2/wlroots-0.18.2.tar.gz",
+      "sha256": "d98ff65389d41b5d6e2c340b1716327b87550f7574577884d85202613d5a5700",
+      "license": "MIT",
+      "stage": "stage2",
+      "dependencies": ["wayland", "wayland-protocols", "mesa", "libxkbcommon", "pixman", "libinput", "libseat"]
+    },
+    {
+      "name": "qt6",
+      "category": "gui",
+      "version": "6.8.1",
+      "upstream_url": "https://download.qt.io/official_releases/qt/6.8/6.8.1/single/qt-everywhere-src-6.8.1.tar.xz",
+      "sha256": "4b52b22f28aa292143ab55b3bc91f6356788db14eb16ebf0516faef4a652ff15",
+      "license": "LGPL-3.0-only OR GPL-2.0-or-later",
+      "stage": "stage2",
+      "dependencies": ["glibc", "fontconfig", "freetype", "glib", "mesa", "wayland", "libxkbcommon", "vulkan-headers"]
+    },
+    {
+      "name": "pipewire",
+      "category": "audio",
+      "version": "1.2.7",
+      "upstream_url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.2.7/pipewire-1.2.7.tar.gz",
+      "sha256": "a3be34fdf24fa9ea156e7dfc89cf0438cfc8d4dfaa6e931ca8a21350ae2e1b12",
+      "license": "MIT",
+      "stage": "stage2",
+      "dependencies": ["alsa-lib", "dbus", "systemd", "glib"]
+    },
+    {
+      "name": "wireplumber",
+      "category": "audio",
+      "version": "0.5.6",
+      "upstream_url": "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.6/wireplumber-0.5.6.tar.gz",
+      "sha256": "44ad2052c34c892b15fa2ff42c9497e2bf577b2520ef6b8c8d88e6a12b6df844",
+      "license": "MIT",
+      "stage": "stage2",
+      "dependencies": ["pipewire", "glib", "lua"]
+    },
+    {
+      "name": "networkmanager",
+      "category": "network",
+      "version": "1.50.0",
+      "upstream_url": "https://gitlab.freedesktop.org/NetworkManager/NetworkManager/-/archive/1.50.0/NetworkManager-1.50.0.tar.gz",
+      "sha256": "9a0c20177dd714399e71ec252579b63a9ba01f2f8115eb375ee302ecdc9f1b95",
+      "license": "GPL-2.0-or-later",
+      "stage": "stage2",
+      "dependencies": ["glib", "systemd", "libndp", "curl", "libgudev", "polkit"]
+    },
+    {
+      "name": "apparmor",
+      "category": "security",
+      "version": "4.0.3",
+      "upstream_url": "https://gitlab.com/apparmor/apparmor/-/archive/v4.0.3/apparmor-v4.0.3.tar.gz",
+      "sha256": "e305e75da78f921da8185f2a1b1836696dbf2fa31be329c31405e36cb077d716",
+      "license": "GPL-2.0-only AND LGPL-2.1-only",
+      "stage": "stage2",
+      "dependencies": ["glibc", "flex", "bison"]
+    },
+    {
+      "name": "nftables",
+      "category": "security",
+      "version": "1.1.1",
+      "upstream_url": "https://netfilter.org/projects/nftables/files/nftables-1.1.1.tar.xz",
+      "sha256": "82798e3b1236ea246888ee3824f8d55ffc6ff7866e4a2e58e388d71fbce3015f",
+      "license": "GPL-2.0-only",
+      "stage": "stage2",
+      "dependencies": ["libnftnl", "gmp", "jansson"]
+    },
+    {
+      "name": "open-vm-tools",
+      "category": "virtualization",
+      "version": "12.5.0",
+      "upstream_url": "https://github.com/vmware/open-vm-tools/archive/refs/tags/stable-12.5.0.tar.gz",
+      "sha256": "43924376c7c00e1e90ef82bcfd95b542e742888fbf02efd3cf0f769062eb8aa3",
+      "license": "GPL-2.0-only AND LGPL-2.1-only",
+      "stage": "virtualization",
+      "dependencies": ["glibc", "glib", "libdnet", "libtirpc", "fuse3", "libmspack"]
+    }
+  ]
+}
