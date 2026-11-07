@@ -83,3 +83,4 @@ python build/tools/nova_build.py --build-iso
 
 Der aktuelle Entwicklungs- und Implementierungsstand wird in [STATUS.md](file:///d:/Development/Systeme/NOVA/STATUS.md) geführt.
 Alle 19 obligatorischen Systemtests werden über die Test-Suite in `testing/` validiert (siehe [TESTING.md](file:///d:/Development/Systeme/NOVA/TESTING.md)).
+

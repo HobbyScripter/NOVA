@@ -88,3 +88,4 @@ graph TD
   - Native Unterstützung für Skalierungsfaktoren (z. B. 125%, 150%, 200%) über das Wayland Fractional-Scale-Protokoll (`wp_fractional_scale_manager_v1`).
 - **Software-Rendering Fallback**:
   - Falls kein Hardware-OpenGL/Vulkan zur Verfügung steht (z. B. im Failsafe-Modus oder in älteren VMs), schaltet der Compositor automatisch auf `llvmpipe` oder `pixman` um.
+

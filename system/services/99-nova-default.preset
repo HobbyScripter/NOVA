@@ -25,3 +25,4 @@ enable systemd-timesyncd.service
 
 # NOVA Desktop Display Manager
 enable nova-desktop.service
+

@@ -77,3 +77,4 @@ Jeder Testlauf erzeugt ein standardisiertes JSON- und Markdown-Protokoll in `tes
 - Exit-Code und Standardausgabe / Standardfehler
 - Detaillierter Stacktrace bei Fehlschlag
 - System-Hardware- und Hypervisor-Zustand
+

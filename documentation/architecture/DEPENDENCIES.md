@@ -77,3 +77,4 @@ NOVA OS respektiert die Lizenzen aller verwendeten Upstream-Projekte:
 1. **GPL-Komponenten (GPL-2.0, GPL-3.0)**: Sämtliche Modifikationen und Kernel-Konfigurationen werden im Quellcode offengelegt und versioniert.
 2. **LGPL-Bibliotheken (glibc, Qt 6, systemd)**: Werden standardmäßig dynamisch gelinkt, um die Austauschbarkeit durch den Endanwender uneingeschränkt zu gewährleisten.
 3. **Freizügige Lizenzen (MIT, BSD, Apache-2.0)**: Alle Copyright-Vermerke und Lizenztexte verbleiben unverändert in den entsprechenden Paketarchiven unter `/usr/share/licenses/<paketname>/`.
+

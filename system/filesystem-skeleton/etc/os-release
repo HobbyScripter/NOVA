@@ -12,3 +12,4 @@ BUG_REPORT_URL="https://bugs.nova-os.org/"
 DOCUMENTATION_URL="https://docs.nova-os.org/"
 LOGO=nova-logo-icon
 DEFAULT_HOSTNAME=nova-pc
+

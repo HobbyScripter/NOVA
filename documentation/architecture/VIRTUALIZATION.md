@@ -62,3 +62,4 @@ Beim Systemstart prüft `nova-vm-detect` über DMI, ACPI und CPUID-Hypervisor-Si
 ### VMware Workstation Test-Pipeline
 1. Generierung einer validen `.vmx`-Konfigurationsdatei mit EFI-Firmware (`firmware = "efi"`), 4 GB RAM, SVGA-Treiber und NVMe-Bootdisk.
 2. Prüfung der Guest-Tools-Services auf Lauffähigkeit.
+

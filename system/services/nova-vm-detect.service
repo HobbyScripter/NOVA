@@ -13,3 +13,4 @@ StandardOutput=journal
 
 [Install]
 WantedBy=basic.target
+

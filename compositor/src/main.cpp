@@ -19,3 +19,4 @@ int main(int argc, char* argv[]) {
     std::cout << "[NOVA-COMPOSITOR] Desktop-Surfaces aktiv. Ereignisschleife läuft." << std::endl;
     return 0;
 }
+

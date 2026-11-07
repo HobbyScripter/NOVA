@@ -97,3 +97,4 @@ Diese Roadmap definiert die verbindlichen Entwicklungsphasen von **PROJECT NOVA 
 - [ ] Berechnung von SHA-256 Prüfsummen und GPG-Signierung der Release-Images
 - [ ] Erstellung der vollständigen Installations- und Benutzerdokumentation
 - [ ] Durchführung aller 19 Pflichttests zur formalen Erreichung der Definition of Done
+

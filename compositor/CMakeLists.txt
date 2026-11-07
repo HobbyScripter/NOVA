@@ -18,3 +18,4 @@ add_executable(nova-compositor ${SOURCES})
 
 # Installation target
 install(TARGETS nova-compositor DESTINATION bin)
+

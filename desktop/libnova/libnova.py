@@ -134,3 +134,4 @@ _global_theme_manager = ThemeManager()
 
 def get_theme_manager() -> ThemeManager:
     return _global_theme_manager
+

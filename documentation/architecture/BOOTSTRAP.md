@@ -110,3 +110,4 @@ Ziel ist es, ein vollständiges Betriebssystem autonom aus den Upstream-Quelltex
 - Die Basispakete werden nativ für NOVA OS übersetzt.
 - Die finale Target-RPM-Datenbank wird initialisiert (`rpm --initdb --root=$SYSROOT_DIR`).
 - DNF5 wird konfiguriert und übernimmt ab diesem Zeitpunkt die Paketverwaltung.
+

@@ -140,3 +140,4 @@ void NovaCompositor::switchToWorkspace(int workspaceId) {
 }
 
 } // namespace Nova
+

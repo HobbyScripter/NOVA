@@ -256,3 +256,4 @@ VirtualBox und VMware sind First-Class-Plattformen von NOVA OS:
   - VirtualBox: `vboxvideo` DRM-Treiber und VMSVGA-Grafikadapter.
   - VMware: `vmwgfx` DRM-Treiber und VMware SVGA II.
   - **Ausfallsicherheit**: Der NOVA Compositor fällt bei fehlender 3D-Beschleunigung nahtlos auf CPU-basiertes Software-Rendering (`llvmpipe` / `pixman`) zurück.
+

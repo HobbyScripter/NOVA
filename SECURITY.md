@@ -109,3 +109,4 @@ Das Netzwerk ist standardmäßig vollständig geschützt:
   - `CONFIG_RANDOMIZE_BASE=y` (KASLR)
   - `CONFIG_INIT_ON_ALLOC_DEFAULT_ON=y` & `CONFIG_INIT_ON_FREE_DEFAULT_ON=y`
   - `CONFIG_STRICT_DEVMEM=y` & `CONFIG_IO_STRICT_DEVMEM=y`
+

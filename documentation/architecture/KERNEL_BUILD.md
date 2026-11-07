@@ -82,3 +82,4 @@ Um unbootbare Systeme auszuschließen, hält NOVA OS stets mindestens zwei bootf
    - GRUB zählt fehlgeschlagene Boot-Versuche (`boot_counter`).
    - Schlägt der Boot des neuen Kernels fehl (z. B. Kernel Panic oder Timeout), schaltet GRUB beim nächsten Boot automatisch auf `vmlinuz-nova-previous` um.
    - Der Benutzer kann im Boot-Menü jederzeit manuell "NOVA OS (Previous Kernel)" oder "NOVA OS Recovery Mode" auswählen.
+

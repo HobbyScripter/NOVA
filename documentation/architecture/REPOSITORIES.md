@@ -69,3 +69,4 @@ Flatpak dient als Ergänzung für Desktop-Software:
 - Standardmäßig vorkonfiguriertes Remote: `flathub` (`https://dl.flathub.org/repo/flathub.flatpakrepo`).
 - Vollständige Integration in den **NOVA Store** und `xdg-desktop-portal-nova`.
 - Strikte Trennung: Systemnahe Komponenten und Desktop-Dienste stammen ausschließlich aus den NOVA RPM-Repositories; Drittanbieter-GUI-Programme können wahlweise via RPM oder isoliertem Flatpak bezogen werden.
+
