@@ -1,0 +1,16 @@
+{
+  "name": "test-pkg",
+  "version": "1.0.0",
+  "release": "1.nova",
+  "arch": "x86_64",
+  "license": "MIT",
+  "summary": "NOVA OS Native Package",
+  "dependencies": [
+    "glibc"
+  ],
+  "files": [
+    "/usr/bin/test-pkg"
+  ],
+  "install_script": "#!/bin/sh\nexit 0\n",
+  "uninstall_script": "#!/bin/sh\nexit 0\n"
+}

@@ -1,0 +1,9 @@
+# /etc/fstab - Static file system information for NOVA OS
+# <file system>             <mount point>   <type>  <options>                                       <dump>  <pass>
+LABEL=NOVA_ROOT             /               btrfs   rw,noatime,compress=zstd:3,subvol=@             0       0
+LABEL=NOVA_ROOT             /home           btrfs   rw,noatime,compress=zstd:3,subvol=@home         0       0
+LABEL=NOVA_ROOT             /.snapshots     btrfs   rw,noatime,compress=zstd:3,subvol=@snapshots    0       0
+LABEL=NOVA_ROOT             /var/log        btrfs   rw,noatime,subvol=@var_log                      0       0
+LABEL=NOVA_ROOT             /swap           btrfs   rw,noatime,nodatacow,subvol=@swap               0       0
+LABEL=NOVA_BOOT             /boot/efi       vfat    rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro 0 2
+/swap/swapfile              none            swap    defaults                                        0       0

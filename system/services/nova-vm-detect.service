@@ -1,0 +1,15 @@
+[Unit]
+Description=NOVA OS Virtual Machine Integration & Driver Activator
+Documentation=https://docs.nova-os.org/virtualization
+DefaultDependencies=no
+After=systemd-udev-trigger.service
+Before=sysinit.target basic.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/nova-vm-detect --apply
+StandardOutput=journal
+
+[Install]
+WantedBy=basic.target

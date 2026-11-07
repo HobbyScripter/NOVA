@@ -4,12 +4,8 @@
   "release": "1.nova",
   "arch": "x86_64",
   "license": "MIT",
-  "summary": "NOVA OS Native Package",
-  "dependencies": [
-    "wayland",
-    "wlroots",
-    "qt6"
-  ],
+  "summary": "NOVA Wayland Compositor",
+  "dependencies": [],
   "files": [
     "/usr/bin/nova-compositor"
   ],

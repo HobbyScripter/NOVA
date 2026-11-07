@@ -1,0 +1,27 @@
+# Default systemd preset for NOVA OS
+
+# Network & Connectivity
+enable NetworkManager.service
+enable NetworkManager-wait-online.service
+enable wpa_supplicant.service
+enable bluetooth.service
+
+# Audio
+enable pipewire.service
+enable pipewire-pulse.service
+enable wireplumber.service
+
+# Security
+enable apparmor.service
+enable nftables.service
+
+# Virtualization & Hardware Detection
+enable nova-vm-detect.service
+enable udisks2.service
+enable upower.service
+
+# Time Synchronization
+enable systemd-timesyncd.service
+
+# NOVA Desktop Display Manager
+enable nova-desktop.service

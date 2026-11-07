@@ -1,0 +1,26 @@
+[nova-stable]
+name=NOVA OS $releasever - $basearch - Stable
+baseurl=https://repo.nova-os.org/stable/$basearch/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-NOVA-OS
+metadata_expire=7d
+
+[nova-testing]
+name=NOVA OS $releasever - $basearch - Testing
+baseurl=https://repo.nova-os.org/testing/$basearch/
+enabled=0
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-NOVA-OS
+metadata_expire=1d
+
+[nova-development]
+name=NOVA OS $releasever - $basearch - Development
+baseurl=https://repo.nova-os.org/development/$basearch/
+enabled=0
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-NOVA-OS
+metadata_expire=6h

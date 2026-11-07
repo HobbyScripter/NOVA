@@ -4,11 +4,8 @@
   "release": "1.nova",
   "arch": "x86_64",
   "license": "LGPL-2.1-or-later",
-  "summary": "NOVA OS Native Package",
-  "dependencies": [
-    "glibc",
-    "libcap"
-  ],
+  "summary": "systemd init system",
+  "dependencies": [],
   "files": [
     "/usr/bin/systemd"
   ],

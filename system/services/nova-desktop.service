@@ -1,0 +1,17 @@
+[Unit]
+Description=NOVA Desktop Wayland Session & Display Manager
+Documentation=https://docs.nova-os.org/desktop
+After=systemd-user-sessions.service plymouth-quit-wait.service systemd-logind.service
+Conflicts=getty@tty1.service
+
+[Service]
+ExecStart=/usr/bin/nova-session
+Restart=always
+RestartSec=1s
+BusName=org.nova.Session
+StandardOutput=journal
+StandardError=journal
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SETUID CAP_SETGID CAP_SYS_TTY_CONFIG
+
+[Install]
+WantedBy=graphical.target

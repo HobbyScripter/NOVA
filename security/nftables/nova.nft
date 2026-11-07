@@ -1,0 +1,42 @@
+#!/usr/sbin/nft -f
+# NOVA OS Default Stateful Firewall Ruleset
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+
+        # Connection Tracking: Established and Related
+        ct state established,related accept
+
+        # Invalid packets drop
+        ct state invalid drop
+
+        # Loopback
+        iif "lo" accept
+
+        # ICMP / ICMPv6 ping & diagnostic
+        ip protocol icmp accept
+        ip6 nexthdr ipv6-icmp accept
+
+        # DHCP Client IPv4 / IPv6
+        udp sport 67 udp dport 68 accept
+        udp sport 547 udp dport 546 accept
+
+        # mDNS (Local network service discovery for PipeWire / Printers)
+        udp dport 5353 ip daddr 224.0.0.251 accept
+
+        # Log & drop everything else
+        limit rate 5/minute log prefix "NOVA-FIREWALL-BLOCK: "
+        counter drop
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}
