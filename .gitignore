@@ -1,0 +1,10 @@
+# Git ignore for NOVA OS build artifacts
+target/
+build/output/*.exe
+build/output/*.pdb
+build/output/*.dll
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.system_generated/
