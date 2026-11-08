@@ -64,3 +64,4 @@ int main(int argc, char* argv[]) {
     store.installApp("org.videolan.VLC");
     return 0;
 }
+

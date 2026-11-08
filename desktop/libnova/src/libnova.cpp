@@ -68,3 +68,4 @@ void ThemeEngine::registerCallback(std::function<void(ThemeMode, const std::stri
 }
 
 } // namespace Nova
+

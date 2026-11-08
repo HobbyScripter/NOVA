@@ -21,3 +21,4 @@ int main(int argc, char* argv[]) {
     launcher.launch("org.nova.terminal");
     return 0;
 }
+

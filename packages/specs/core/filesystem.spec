@@ -55,3 +55,4 @@ ln -sf usr/lib64 %{buildroot}/lib64
 %changelog
 * Fri Nov 07 2026 NOVA OS Development Team <dev@nova-os.org> - 1.0.0-1.nova
 - Initial package for NOVA OS 1.0 (Supernova)
+

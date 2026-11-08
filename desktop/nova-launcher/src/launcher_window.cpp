@@ -69,3 +69,4 @@ void NovaLauncherWindow::launch(const std::string& appId) const {
 }
 
 } // namespace Nova
+

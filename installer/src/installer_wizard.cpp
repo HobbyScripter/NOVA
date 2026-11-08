@@ -72,3 +72,4 @@ bool NovaInstallerWizard::executeInstallation() {
 }
 
 } // namespace Nova
+

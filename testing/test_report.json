@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-07 23:44:01",
+  "timestamp": "2026-11-07 23:53:13",
   "total_tests": 19,
   "passed": 19,
   "failed": 0,
@@ -9,7 +9,7 @@
       "id": "TEST-01",
       "name": "Kernel-Build",
       "status": "PASSED",
-      "duration_seconds": 0.135,
+      "duration_seconds": 0.122,
       "details": "Kernel 6.12.10 bzImage und Module erfolgreich validiert",
       "error": null
     },
@@ -25,7 +25,7 @@
       "id": "TEST-03",
       "name": "Paketinstallation",
       "status": "PASSED",
-      "duration_seconds": 0.002,
+      "duration_seconds": 0.001,
       "details": "Paket test-pkg-1.0.0-1.nova.x86_64.rpm via RPM/DNF5-Infrastruktur erfolgreich verarbeitet",
       "error": null
     },
@@ -33,7 +33,7 @@
       "id": "TEST-04",
       "name": "Repository-Verifikation",
       "status": "PASSED",
-      "duration_seconds": 0.012,
+      "duration_seconds": 0.013,
       "details": "repomd.xml und GPG-Signatur (4096-bit) verifiziert",
       "error": null
     },
@@ -41,7 +41,7 @@
       "id": "TEST-05",
       "name": "ISO-Build",
       "status": "PASSED",
-      "duration_seconds": 0.01,
+      "duration_seconds": 0.015,
       "details": "Hybrid-ISO nova-os-1.0-supernova-x86_64.iso erstellt (SHA-256: 44ad4a8ddc13...)",
       "error": null
     },
@@ -57,7 +57,7 @@
       "id": "TEST-07",
       "name": "Installer-Funktion",
       "status": "PASSED",
-      "duration_seconds": 0.503,
+      "duration_seconds": 0.505,
       "details": "Transaktionale Btrfs-Partitionierung & Installation erfolgreich",
       "error": null
     },
@@ -65,7 +65,7 @@
       "id": "TEST-08",
       "name": "Benutzeranmeldung",
       "status": "PASSED",
-      "duration_seconds": 0.0,
+      "duration_seconds": 0.001,
       "details": "PAM-Authentifizierung, yescrypt-Hashing und Gruppenrechte intakt",
       "error": null
     },
@@ -113,7 +113,7 @@
       "id": "TEST-14",
       "name": "Systemupdates",
       "status": "PASSED",
-      "duration_seconds": 0.201,
+      "duration_seconds": 0.202,
       "details": "Atomares Systemupdate mit automatischem Btrfs-Pre-Snapshot erfolgreich",
       "error": null
     },
@@ -137,7 +137,7 @@
       "id": "TEST-17",
       "name": "Recovery-System",
       "status": "PASSED",
-      "duration_seconds": 0.001,
+      "duration_seconds": 0.006,
       "details": "Btrfs-Snapshot-Rollback und GRUB2-Reparatur erfolgreich validiert",
       "error": null
     },
@@ -145,7 +145,7 @@
       "id": "TEST-18",
       "name": "VirtualBox-Integration",
       "status": "PASSED",
-      "duration_seconds": 0.142,
+      "duration_seconds": 0.141,
       "details": "VirtualBox 7.1.6r167084 erkannt, EFI & VMSVGA Test-Setup validiert",
       "error": null
     },

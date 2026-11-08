@@ -71,3 +71,4 @@ std::vector<std::pair<std::string, std::string>> NovaFileManager::bookmarks() co
 }
 
 } // namespace Nova
+

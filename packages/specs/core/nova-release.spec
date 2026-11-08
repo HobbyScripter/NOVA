@@ -29,3 +29,4 @@ install -m 644 %{_sourcedir}/nova.repo %{buildroot}/etc/yum.repos.d/nova.repo
 %changelog
 * Fri Nov 07 2026 NOVA OS Development Team <dev@nova-os.org> - 1.0.0-1.nova
 - Initial release package for NOVA OS 1.0 Supernova
+

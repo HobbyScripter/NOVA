@@ -56,3 +56,4 @@ fi
 %changelog
 * Fri Nov 07 2026 NOVA OS Development Team <dev@nova-os.org> - 6.12.10-1.nova
 - Official stable kernel 6.12.10 build for NOVA OS
+

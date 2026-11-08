@@ -39,3 +39,4 @@ Dieses Dokument definiert die verbindlichen Richtlinien bezüglich Programmiersp
   Der Start eines Python-Prozesses benötigt auf Standard-Hardware 80 bis 250 Millisekunden (Modul-Imports, Bytecode-Kompilierung). Eine C++/Rust-Binärdatei startet in unter 5 Millisekunden.
 - **Abhängigkeitsintegrität**:
   Wird Python im Basissystem vermieden, können Paket-Aktualisierungen von Python-Bibliotheken (oder deren Inkompatibilitäten bei Minor-Versionssprüngen) niemals kritische Systemfunktionen wie den Boot-Prozess, das Netzwerk oder die Wiederherstellung lahmlegen.
+

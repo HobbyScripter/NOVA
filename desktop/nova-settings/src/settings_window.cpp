@@ -39,3 +39,4 @@ void NovaSettingsWindow::printOverview() const {
 }
 
 } // namespace Nova
+

@@ -46,3 +46,4 @@ void NovaPanelWindow::render() const {
 }
 
 } // namespace Nova
+

@@ -20,3 +20,4 @@ int main(int argc, char* argv[]) {
     bool ok = wizard.executeInstallation();
     return ok ? 0 : 1;
 }
+

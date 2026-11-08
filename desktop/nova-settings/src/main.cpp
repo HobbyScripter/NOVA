@@ -20,3 +20,4 @@ int main(int argc, char* argv[]) {
     settings.printOverview();
     return 0;
 }
+
