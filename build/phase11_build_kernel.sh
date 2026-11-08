@@ -7,7 +7,7 @@ set -e
 # Configuration
 KERNEL_VERSION="6.12.5"  # Adjust to latest stable
 KERNEL_URL="https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${KERNEL_VERSION}.tar.xz"
-NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 BUILD_DIR="$NOVA_ROOT/build/kernel"
 INSTALL_DIR="$NOVA_ROOT/install"
 KERNEL_CONFIG="$NOVA_ROOT/kernel/configs/nova_defconfig"

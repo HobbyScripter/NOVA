@@ -1,0 +1,27 @@
+=== Phase 11.3: System Prüfung ===
+Prüfungsdatum: Sun Nov  8 12:28:45 CET 2026
+
+Distribution: Ubuntu
+Version: 24.04.4 LTS (Noble Numbat)
+ID: ubuntu
+
+Kernel-Version: 7.0.0-42-generic
+Kernel-Release: #42~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Mon Oct 19 14:43:01 UTC 2
+
+CPU-Kerne: 2
+CPU-Modell: AMD Ryzen 7 5800X 8-Core Processor
+Gesamtspeicher: 5 GB
+Verfügbarer Speicher: 4 GB
+
+Gesamtspeicher: 98 GB
+Freier Speicher: 81 GB
+
+Netzwerk: Verbunden mit kernel.org
+Ubuntu Archive: Verbunden
+
+UEFI: Nicht aktiviert
+
+Hostname: ramon-VMware-Virtual-Platform
+Uptime: up 27 minutes
+Load Average: 0.08 0.10 0.20
+

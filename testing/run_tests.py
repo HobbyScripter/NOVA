@@ -99,11 +99,15 @@ class NovaTestSuite:
         if not kb.verify_config():
             return False, "nova_defconfig unvollständig"
         info = kb.fetch_latest_stable_version()
-        kb.install_kernel(info["version"])
+        if not kb.install_kernel(info["version"]):
+            return False, (
+                "kein echtes Kernel-Artefakt verfügbar - Textplatzhalter werden "
+                "abgewiesen (make bzImage + dracut erforderlich)"
+            )
         vmlinuz = WORKSPACE_ROOT / "build" / "output" / "sysroot" / "boot" / "vmlinuz-nova-current"
-        if not vmlinuz.exists():
-            return False, "vmlinuz-nova-current nicht generiert"
-        return True, f"Kernel {info['version']} bzImage und Module erfolgreich validiert"
+        if not kb._is_real_bzimage(vmlinuz):
+            return False, "vmlinuz-nova-current ist kein echtes bzImage/ELF"
+        return True, f"Kernel {info['version']} als echtes bzImage verifiziert"
 
     # TEST-02: Root-Dateisystem-Build
     def test_02_rootfs_build(self) -> Tuple[bool, str]:
@@ -141,12 +145,16 @@ class NovaTestSuite:
 
     # TEST-05: ISO-Build
     def test_05_iso_build(self) -> Tuple[bool, str]:
+        from build.tools.nova_iso_builder import ArtifactError
+
         builder = NovaIsoBuilder()
-        iso = builder.build_iso()
-        if not iso.exists() or iso.stat().st_size < 1000:
-            return False, "ISO-Datei nicht erstellt oder korrupt"
+        try:
+            iso = builder.build_iso()
+            details = builder.verify_iso()
+        except ArtifactError as exc:
+            return False, f"ISO-Build korrekt abgebrochen: {exc}"
         sha256 = builder.calculate_checksum(iso, "sha256")
-        return True, f"Hybrid-ISO {iso.name} erstellt (SHA-256: {sha256[:12]}...)"
+        return True, f"Hybrid-ISO {iso.name} verifiziert ({details}; SHA-256: {sha256[:12]}...)"
 
     # TEST-06: Live-System-Boot
     def test_06_live_boot(self) -> Tuple[bool, str]:
@@ -230,7 +238,8 @@ class NovaTestSuite:
     # TEST-15: Kernelupdates
     def test_15_kernel_updates(self) -> Tuple[bool, str]:
         kb = KernelBuilder()
-        kb.install_kernel("6.12.11")
+        if not kb.install_kernel("6.12.11"):
+            return False, "Kernel-Rotation nicht prüfbar: kein echtes Kernel-Artefakt verfügbar"
         if kb.state.get("current_kernel") != "6.12.11":
             return False, "Kernel-Version nicht als current registriert"
         if kb.state.get("previous_kernel") is None:

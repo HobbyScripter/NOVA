@@ -29,6 +29,7 @@ echo_header() {
 
 # Configuration
 NOVA_ROOT="${NOVA_ROOT:-$(pwd)}"
+export NOVA_ROOT   # Kindprozess (phase11_2_automated_tests.sh) muss denselben Pfad sehen
 REPORT_FILE="$NOVA_ROOT/phase11_3_project_check.log"
 
 echo "=== Phase 11.3: Projektprüfung ===" > "$REPORT_FILE"
@@ -282,8 +283,10 @@ test_automated_tests() {
 
     if [ -f "$test_script" ]; then
         echo_info "Führe automatisierte Tests aus..."
-        bash "$test_script"
-        local test_result=$?
+        # set -e darf das Skript hier nicht abbrechen, sonst wird ein Testergebnis
+        # niemals ausgewertet und die restlichen Prüfungen laufen nicht mehr.
+        local test_result=0
+        bash "$test_script" || test_result=$?
 
         if [ $test_result -eq 0 ]; then
             echo_info "✓ Alle automatisierten Tests bestanden"

@@ -109,9 +109,54 @@ class KernelBuilder:
         print("[KERNEL] Validierung erfolgreich: Alle obligatorischen Kernel-Optionen sind aktiv.")
         return True
 
-    def install_kernel(self, version: str, fake_binary: bool = True) -> bool:
-        """Installiert eine neue Kernel-Version mit Rotation (Current -> Previous)."""
+    @staticmethod
+    def _is_real_bzimage(path: Path) -> bool:
+        """Akzeptiert nur echte Kernel-Images: ELF oder bzImage mit HdrS-Magic."""
+        try:
+            if not path.is_file() or path.stat().st_size < 1_000_000:
+                return False
+            with open(path, "rb") as fh:
+                if fh.read(4) == b"\x7fELF":
+                    return True
+                fh.seek(0x202)
+                return fh.read(4) == b"HdrS"
+        except OSError:
+            return False
+
+    @staticmethod
+    def _is_real_initramfs(path: Path) -> bool:
+        magics = (b"\x1f\x8b", b"\xfd7zXZ\x00", b"\x28\xb5\x2f\xfd",
+                  b"\x04\x22\x4d\x18", b"070701", b"070702")
+        try:
+            if not path.is_file() or path.stat().st_size < 100_000:
+                return False
+            with open(path, "rb") as fh:
+                head = fh.read(8)
+            return any(head.startswith(magic) for magic in magics)
+        except OSError:
+            return False
+
+    def install_kernel(self, version: str, bzimage: Optional[Path] = None,
+                       initramfs: Optional[Path] = None) -> bool:
+        """Installiert eine neue Kernel-Version mit Rotation (Current -> Previous).
+
+        Es werden ausschließlich echte Artefakte akzeptiert. Textplatzhalter
+        werden abgewiesen, ohne Dateien oder Zustand zu verändern - die frühere
+        Implementierung schrieb 65-Byte-Textdateien als "bzImage".
+        """
         print(f"\n[KERNEL] Installiere Kernel Version {version}...")
+
+        src_bzimage = Path(bzimage or os.environ.get("NOVA_BZIMAGE", ""))
+        src_initramfs = Path(initramfs or os.environ.get("NOVA_INITRAMFS", ""))
+
+        if not self._is_real_bzimage(src_bzimage):
+            print(f"[KERNEL] FEHLER: Kein echtes Kernel-Image (ELF/bzImage) unter: {src_bzimage}")
+            print("[KERNEL] Setze --bzimage bzw. NOVA_BZIMAGE nach einem echten Kernel-Build (make bzImage).")
+            return False
+        if not self._is_real_initramfs(src_initramfs):
+            print(f"[KERNEL] FEHLER: Kein echtes Initramfs-Archiv (gzip/xz/zstd/cpio) unter: {src_initramfs}")
+            print("[KERNEL] Setze --initramfs bzw. NOVA_INITRAMFS nach einer echten dracut-Generierung.")
+            return False
 
         current_vmlinuz = self.boot_dir / "vmlinuz-nova-current"
         current_initramfs = self.boot_dir / "initramfs-nova-current.img"
@@ -130,9 +175,8 @@ class KernelBuilder:
         vmlinuz_target = self.boot_dir / f"vmlinuz-nova-{version}"
         initramfs_target = self.boot_dir / f"initramfs-nova-{version}.img"
 
-        kernel_header = f"NOVA OS Linux Kernel Image v{version} (x86_64, Btrfs, AppArmor, DRM)\n"
-        vmlinuz_target.write_text(kernel_header, encoding="utf-8")
-        initramfs_target.write_text(f"NOVA OS Dracut Initramfs for v{version} (zstd compressed)\n", encoding="utf-8")
+        shutil.copy2(src_bzimage, vmlinuz_target)
+        shutil.copy2(src_initramfs, initramfs_target)
 
         # Symlinks / Kopien für GRUB Bootloader
         shutil.copy2(vmlinuz_target, current_vmlinuz)
@@ -213,7 +257,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="NOVA OS Kernel Manager")
     parser.add_argument("--check-upstream", action="store_true", help="Fragt neueste Version von kernel.org ab")
     parser.add_argument("--verify-config", action="store_true", help="Prüft nova_defconfig")
-    parser.add_argument("--build", action="store_true", help="Kompiliert und installiert Kernel")
+    parser.add_argument("--build", action="store_true", help="Installiert einen real gebauten Kernel")
+    parser.add_argument("--bzimage", help="Pfad zum echten bzImage (oder NOVA_BZIMAGE)")
+    parser.add_argument("--initramfs", help="Pfad zum echten Initramfs (oder NOVA_INITRAMFS)")
     parser.add_argument("--rollback", action="store_true", help="Setzt Kernel auf vorherige Version zurück")
     parser.add_argument("--generate-grub", action="store_true", help="Erzeugt grub.cfg")
     args = parser.parse_args()
@@ -232,7 +278,7 @@ def main() -> int:
         if not builder.verify_config():
             return 1
         info = builder.fetch_latest_stable_version()
-        if not builder.install_kernel(info["version"]):
+        if not builder.install_kernel(info["version"], args.bzimage, args.initramfs):
             return 1
         builder.generate_grub_config()
         return 0

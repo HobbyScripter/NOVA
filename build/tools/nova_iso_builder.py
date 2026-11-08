@@ -1,38 +1,50 @@
 #!/usr/bin/env python3
 """
-NOVA ISO Builder - Bootable Hybrid ISO Generation Engine
-Erzeugt bootfähige Live- und Installations-ISO-Images für NOVA OS mit:
-- UEFI Boot (EFI/BOOT/BOOTX64.EFI)
-- BIOS El Torito Kompatibilität
-- ZSTD-komprimiertem Live-SquashFS Root-Dateisystem
-- SHA-256 / SHA-512 Prüfsummen und digitaler Signatur
+NOVA ISO Builder - echte Hybrid-ISO-Erzeugung (BIOS El Torito + UEFI)
+
+Ersetzt die frühere Platzhalter-Implementierung. Diese schrieb Textstubs in den
+Staging-Baum und setzte eine 34-KB-Datei mit fehlerhaftem Primary Volume
+Descriptor von Hand zusammen, ohne jemals ein ISO-Werkzeug aufzurufen.
+
+Jedes Artefakt wird vor dem Staging über Magic-Bytes und Mindestgröße geprüft,
+das Image wird von grub-mkrescue (BIOS + UEFI) erzeugt und das Ergebnis
+anschließend mit xorriso nachverifiziert. Fehlt ein Artefakt oder ist es ein
+Platzhalter, bricht der Build mit Exit-Code 1 ab und es entsteht keine Datei.
 """
 
-import sys
-import os
+from __future__ import annotations
+
+import argparse
 import hashlib
+import shutil
+import subprocess
+import sys
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Optional, Tuple
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
 OUTPUT_DIR = WORKSPACE_ROOT / "build" / "output"
-ISO_DIR = OUTPUT_DIR / "iso"
 SYSROOT_DIR = OUTPUT_DIR / "sysroot"
+ROOTFS_DIR = OUTPUT_DIR / "rootfs"
+ISO_STAGE_ROOT = OUTPUT_DIR / "iso-stage"
 RELEASE_DIR = WORKSPACE_ROOT / "release"
 
-class NovaIsoBuilder:
-    def __init__(self, output_name: str = "nova-os-1.0-supernova-x86_64.iso"):
-        self.output_name = output_name
-        self.iso_target = OUTPUT_DIR / output_name
+KERNEL_MIN_BYTES = 1_000_000
+INITRAMFS_MIN_BYTES = 100_000
+SQUASHFS_MIN_BYTES = 100_000
+ISO_MIN_BYTES = 5_000_000
 
-    def prepare_iso_tree(self) -> Path:
-        """Erstellt die Verzeichnisstruktur für das ISO-Image."""
-        for d in ["EFI/BOOT", "boot/grub", "LiveOS"]:
-            (ISO_DIR / d).mkdir(parents=True, exist_ok=True)
+INITRAMFS_MAGICS = (
+    b"\x1f\x8b",            # gzip
+    b"\xfd7zXZ\x00",        # xz
+    b"\x28\xb5\x2f\xfd",    # zstd
+    b"\x04\x22\x4d\x18",    # lz4
+    b"070701",              # cpio newc
+    b"070702",              # cpio crc
+)
 
-        # 1. GRUB Bootloader Konfiguration für das Live-System
-        live_grub_cfg = """# NOVA OS Official Live ISO Boot Configuration
+LIVE_GRUB_CFG = """# NOVA OS Official Live ISO Boot Configuration
 set default="0"
 set timeout=10
 
@@ -53,106 +65,266 @@ menuentry "Install NOVA OS directly to Hard Drive / SSD" {
     linux /LiveOS/vmlinuz-nova-current root=live:CDLABEL=NOVA_OS_LIVE rd.live.image nova.autoinstall=1
     initrd /LiveOS/initramfs-nova-current.img
 }
-
-menuentry "Memory Test (Memtest86+)" {
-    linux /boot/memtest86+.bin
-}
 """
-        (ISO_DIR / "boot" / "grub" / "grub.cfg").write_text(live_grub_cfg, encoding="utf-8")
-        (ISO_DIR / "EFI" / "BOOT" / "grub.cfg").write_text(live_grub_cfg, encoding="utf-8")
 
-        # 2. Kernel & Initramfs in LiveOS Ordner kopieren / anlegen
-        boot_kernel = SYSROOT_DIR / "boot" / "vmlinuz-nova-current"
-        boot_initramfs = SYSROOT_DIR / "boot" / "initramfs-nova-current.img"
 
-        kernel_content = boot_kernel.read_text(encoding="utf-8") if boot_kernel.exists() else "NOVA OS Kernel v6.12.10 Live\n"
-        initramfs_content = boot_initramfs.read_text(encoding="utf-8") if boot_initramfs.exists() else "NOVA OS Live Initramfs (Dracut)\n"
+class ArtifactError(RuntimeError):
+    """Ein benötigtes Build-Artefakt fehlt, ist ein Platzhalter oder unbrauchbar."""
 
-        (ISO_DIR / "LiveOS" / "vmlinuz-nova-current").write_text(kernel_content, encoding="utf-8")
-        (ISO_DIR / "LiveOS" / "initramfs-nova-current.img").write_text(initramfs_content, encoding="utf-8")
 
-        # 3. SquashFS Rootfs simulieren / verpacken
-        squashfs_img = ISO_DIR / "LiveOS" / "rootfs.img"
-        squashfs_img.write_text("NOVA OS SquashFS Compressed Rootfs Image (ZSTD level 19)\n", encoding="utf-8")
+def _head(path: Path, count: int) -> bytes:
+    with open(path, "rb") as fh:
+        return fh.read(count)
 
-        print(f"[ISO-BUILDER] ISO-Verzeichnisbaum vorbereitet in: {ISO_DIR}")
-        return ISO_DIR
 
+def validate_kernel(path: Path) -> None:
+    """Akzeptiert nur echte Kernel-Images (ELF oder bzImage mit HdrS-Magic)."""
+    if not path.is_file():
+        raise ArtifactError(f"Kernel fehlt: {path}")
+    size = path.stat().st_size
+    if size < KERNEL_MIN_BYTES:
+        raise ArtifactError(
+            f"Kernel ist kein echtes Image: {path} hat nur {size} Bytes "
+            f"(Minimum {KERNEL_MIN_BYTES}). Vermutlich ein Text-Platzhalter."
+        )
+    with open(path, "rb") as fh:
+        head = fh.read(64)
+        if head[:4] == b"\x7fELF":
+            return
+        fh.seek(0x202)
+        if fh.read(4) == b"HdrS":
+            return
+    raise ArtifactError(f"Kernel besitzt keine ELF-/bzImage-Signatur: {path}")
+
+
+def validate_initramfs(path: Path) -> None:
+    if not path.is_file():
+        raise ArtifactError(f"Initramfs fehlt: {path}")
+    size = path.stat().st_size
+    if size < INITRAMFS_MIN_BYTES:
+        raise ArtifactError(
+            f"Initramfs ist kein echtes Archiv: {path} hat nur {size} Bytes "
+            f"(Minimum {INITRAMFS_MIN_BYTES})."
+        )
+    head = _head(path, 8)
+    if not any(head.startswith(magic) for magic in INITRAMFS_MAGICS):
+        raise ArtifactError(
+            f"Initramfs hat keine gzip/xz/zstd/lz4/cpio-Signatur: {path} "
+            f"(erste Bytes: {head[:6]!r})"
+        )
+
+
+def validate_squashfs(path: Path) -> None:
+    if not path.is_file():
+        raise ArtifactError(f"SquashFS fehlt: {path}")
+    size = path.stat().st_size
+    if size < SQUASHFS_MIN_BYTES:
+        raise ArtifactError(f"SquashFS ist zu klein ({size} Bytes): {path}")
+    if _head(path, 4) != b"hsqs":
+        raise ArtifactError(f"Datei ist kein SquashFS-Image (keine 'hsqs'-Signatur): {path}")
+
+
+def _run(cmd: list) -> Tuple[int, str]:
+    proc = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=1800
+    )
+    return proc.returncode, proc.stdout
+
+
+class NovaIsoBuilder:
+    def __init__(
+        self,
+        output_name: Optional[str] = None,
+        kernel: Optional[str] = None,
+        initramfs: Optional[str] = None,
+        rootfs_dir: Optional[str] = None,
+        squashfs: Optional[str] = None,
+    ):
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        self.output_name = output_name or f"nova-os-1.0-supernova-x86_64-{stamp}.iso"
+        self.iso_target = OUTPUT_DIR / self.output_name
+        self.kernel = Path(kernel) if kernel else SYSROOT_DIR / "boot" / "vmlinuz-nova-current"
+        self.initramfs = (
+            Path(initramfs) if initramfs
+            else SYSROOT_DIR / "boot" / "initramfs-nova-current.img"
+        )
+        self.rootfs_dir = Path(rootfs_dir) if rootfs_dir else ROOTFS_DIR
+        self.squashfs_source = Path(squashfs) if squashfs else None
+        self.iso_dir = ISO_STAGE_ROOT / self.iso_target.stem
+
+    # ------------------------------------------------------------------ checks
+    def check_tools(self) -> None:
+        required = ["grub-mkrescue", "mksquashfs", "xorriso", "file"]
+        missing = [tool for tool in required if shutil.which(tool) is None]
+        if missing:
+            raise ArtifactError(
+                "Fehlende Werkzeuge: " + ", ".join(missing)
+                + " (apt install grub2-common grub-pc-bin grub-efi-amd64-bin "
+                  "squashfs-tools xorriso mtools)"
+            )
+
+    def validate_sources(self) -> None:
+        validate_kernel(self.kernel)
+        validate_initramfs(self.initramfs)
+        if self.squashfs_source is not None:
+            validate_squashfs(self.squashfs_source)
+            return
+        if not self.rootfs_dir.is_dir():
+            raise ArtifactError(
+                f"Weder SquashFS-Datei noch RootFS-Verzeichnis vorhanden: {self.rootfs_dir}"
+            )
+        files = sum(1 for item in self.rootfs_dir.rglob("*") if item.is_file())
+        if files < 10:
+            raise ArtifactError(
+                f"RootFS-Verzeichnis enthält nur {files} Dateien: {self.rootfs_dir}"
+            )
+
+    # ----------------------------------------------------------------- staging
+    def _stage_rootfs(self) -> Path:
+        target = self.iso_dir / "LiveOS" / "rootfs.img"
+        if self.squashfs_source is not None:
+            shutil.copy2(self.squashfs_source, target)
+            return target
+
+        print(f"[ISO-BUILDER] Erzeuge SquashFS aus {self.rootfs_dir} ...")
+        code, output = _run([
+            "mksquashfs", str(self.rootfs_dir), str(target),
+            "-comp", "zstd", "-Xcompression-level", "6", "-b", "1M", "-noappend",
+        ])
+        if code != 0:
+            raise ArtifactError(f"mksquashfs fehlgeschlagen (rc={code}):\n{output[-1500:]}")
+        validate_squashfs(target)
+        return target
+
+    def prepare_iso_tree(self) -> Path:
+        if self.iso_dir.exists():
+            raise ArtifactError(
+                f"Staging-Verzeichnis existiert bereits und wird nicht überschrieben: {self.iso_dir}"
+            )
+        (self.iso_dir / "LiveOS").mkdir(parents=True)
+        (self.iso_dir / "boot" / "grub").mkdir(parents=True)
+        (self.iso_dir / "EFI" / "BOOT").mkdir(parents=True)
+
+        # Binärsichere Kopien - kein read_text/write_text auf Kernel-Dateien.
+        shutil.copy2(self.kernel, self.iso_dir / "LiveOS" / "vmlinuz-nova-current")
+        shutil.copy2(self.initramfs, self.iso_dir / "LiveOS" / "initramfs-nova-current.img")
+        validate_kernel(self.iso_dir / "LiveOS" / "vmlinuz-nova-current")
+        validate_initramfs(self.iso_dir / "LiveOS" / "initramfs-nova-current.img")
+
+        self._stage_rootfs()
+
+        (self.iso_dir / "boot" / "grub" / "grub.cfg").write_text(LIVE_GRUB_CFG, encoding="utf-8")
+        (self.iso_dir / "EFI" / "BOOT" / "grub.cfg").write_text(LIVE_GRUB_CFG, encoding="utf-8")
+        print(f"[ISO-BUILDER] Staging-Baum vorbereitet: {self.iso_dir}")
+        return self.iso_dir
+
+    # -------------------------------------------------------------- iso build
     def build_iso(self) -> Path:
-        """Erzeugt das fertige bootfähige Hybrid-ISO Image."""
+        self.check_tools()
+        self.validate_sources()
+
+        if self.iso_target.exists():
+            raise ArtifactError(
+                f"Zieldatei existiert bereits und wird nicht überschrieben: {self.iso_target}"
+            )
+
         self.prepare_iso_tree()
-        print(f"[ISO-BUILDER] Generiere bootfähiges Hybrid-ISO: {self.iso_target}...")
 
-        # In sandboxed / portable environment: Erstelle validiertes ISO-Container-Image
-        iso_header = b"\x00" * 32768 # Standard System Area
-        # Primary Volume Descriptor
-        pvd = b"\x01CD001\x01\x00" + b"NOVA_OS_LIVE".ljust(32, b" ") + b"\x00" * 2000
-        content = iso_header + pvd + b"\nNOVA OS 1.0 (Supernova) - Live & Installable x86_64 Image\n"
+        print(f"[ISO-BUILDER] grub-mkrescue -> {self.iso_target} ...")
+        code, output = _run([
+            "grub-mkrescue", "--output", str(self.iso_target), str(self.iso_dir),
+        ])
+        if code != 0 or not self.iso_target.is_file():
+            raise ArtifactError(
+                f"grub-mkrescue fehlgeschlagen (rc={code}):\n{output[-2000:]}"
+            )
 
-        self.iso_target.write_bytes(content)
-        print(f"[ISO-BUILDER] ISO erfolgreich erstellt: {self.iso_target.name} ({self.iso_target.stat().st_size} Bytes)")
+        details = self.verify_iso()
+        print(f"[ISO-BUILDER] ISO verifiziert: {details}")
 
-        # Prüfsummen berechnen
         sha256 = self.calculate_checksum(self.iso_target, "sha256")
         sha512 = self.calculate_checksum(self.iso_target, "sha512")
-
-        # Checksummen- und Signaturdateien schreiben
-        checksum_file = OUTPUT_DIR / f"{self.output_name}.sha256"
-        checksum_file.write_text(f"{sha256}  {self.output_name}\n", encoding="utf-8")
-
-        sig_file = OUTPUT_DIR / f"{self.output_name}.asc"
-        sig_file.write_text(f"-----BEGIN PGP SIGNATURE-----\nVersion: NOVA-GPG-v1\nRelease: {self.output_name}\nSHA-256: {sha256}\n-----END PGP SIGNATURE-----\n", encoding="utf-8")
-
-        # Release Notes generieren
-        self.generate_release_notes(sha256, sha512)
-
+        (OUTPUT_DIR / f"{self.output_name}.sha256").write_text(
+            f"{sha256}  {self.output_name}\n", encoding="utf-8"
+        )
+        (OUTPUT_DIR / f"{self.output_name}.sha512").write_text(
+            f"{sha512}  {self.output_name}\n", encoding="utf-8"
+        )
+        print(f"[ISO-BUILDER] ISO erstellt: {self.iso_target}")
         print(f"[ISO-BUILDER] SHA-256: {sha256}")
-        print(f"[ISO-BUILDER] Signatur: {sig_file}")
         return self.iso_target
 
+    def verify_iso(self) -> str:
+        """Prüft ISO 9660, El-Torito-Boot, LiveOS-Inhalt und Mindestgröße."""
+        path = self.iso_target
+        if not path.is_file():
+            raise ArtifactError(f"ISO wurde nicht erzeugt: {path}")
+
+        size = path.stat().st_size
+        if size < ISO_MIN_BYTES:
+            raise ArtifactError(
+                f"ISO ist zu klein ({size} Bytes, Minimum {ISO_MIN_BYTES}) - keine echten Inhalte"
+            )
+
+        code, file_out = _run(["file", "-b", str(path)])
+        if "ISO 9660" not in file_out:
+            raise ArtifactError(f"Datei ist kein ISO-9660-Image: {file_out.strip()}")
+
+        code, torito = _run(["xorriso", "-indev", str(path), "-report_el_torito", "plain"])
+        if "El Torito" not in torito:
+            raise ArtifactError(
+                "ISO enthält keine El-Torito-Bootinformation und ist nicht bootfähig:\n"
+                + torito[-800:]
+            )
+
+        code, listing = _run([
+            "xorriso", "-indev", str(path), "-find", "/LiveOS", "-type", "f", "-exec", "lsdl",
+        ])
+        for required in ("vmlinuz-nova-current", "initramfs-nova-current.img", "rootfs.img"):
+            if required not in listing:
+                raise ArtifactError(f"ISO enthält {required} nicht:\n{listing[-800:]}")
+
+        code, pvd = _run(["xorriso", "-indev", str(path), "-pvd_info"])
+        if "Volume id" not in pvd:
+            raise ArtifactError("ISO hat keinen lesbaren Primary Volume Descriptor")
+
+        uefi = "UEFI" in torito or "efi.img" in listing
+        return (
+            f"{size} Bytes, ISO 9660, El Torito, "
+            f"UEFI={'ja' if uefi else 'nein (nur BIOS)'}"
+        )
+
     def calculate_checksum(self, file_path: Path, algorithm: str = "sha256") -> str:
-        h = hashlib.new(algorithm)
-        with open(file_path, "rb") as f:
-            while chunk := f.read(65536):
-                h.update(chunk)
-        return h.hexdigest()
+        digest = hashlib.new(algorithm)
+        with open(file_path, "rb") as fh:
+            while chunk := fh.read(65536):
+                digest.update(chunk)
+        return digest.hexdigest()
 
-    def generate_release_notes(self, sha256: str, sha512: str) -> Path:
-        RELEASE_DIR.mkdir(parents=True, exist_ok=True)
-        rel_notes = RELEASE_DIR / "RELEASE_NOTES.md"
-        content = f"""# NOVA OS 1.0 (Alpha - Supernova) Release Notes
 
-**Veröffentlichungsdatum**: {time.strftime('%d.%m.%Y')}
-**Architektur**: x86_64 (AVX2-optimiert)
-**Dateiname**: `{self.output_name}`
+def main(argv: Optional[list] = None) -> int:
+    parser = argparse.ArgumentParser(description="NOVA OS ISO Builder")
+    parser.add_argument("--output-name", help="Dateiname der ISO (Standard: zeitgestempelt)")
+    parser.add_argument("--kernel", help="Pfad zum echten bzImage/ELF-Kernel")
+    parser.add_argument("--initramfs", help="Pfad zum echten Initramfs-Archiv")
+    parser.add_argument("--rootfs-dir", help="Verzeichnis für mksquashfs")
+    parser.add_argument("--squashfs", help="Bereits erzeugtes SquashFS-Image")
+    args = parser.parse_args(argv)
 
----
-
-## Kern-Highlights
-- **Unabhängige Distribution**: Kein Ubuntu-, Arch- oder Fedora-Respin. Vollständig autonomer zweistufiger Bootstrap.
-- **Linux-Kernel**: Offizieller stabiler Upstream-Kernel 6.12.10 mit Btrfs, AppArmor, NVMe und DRM fest einkompiliert.
-- **NOVA Desktop**: Vollkommen eigenständige Wayland/Qt 6 Desktop-Umgebung mit Wayland-Compositor (`wlroots`), Shell, Panel, Launcher, Files, Settings und Control Center.
-- **Speicher**: Btrfs als Standarddateisystem mit automatischem Snapshot-Rollback (`@`, `@home`, `@snapshots`, `@var_log`, `@swap`).
-- **Paketverwaltung**: RPM v4.20 und DNF5 mit blitzschneller `libsolv`-SAT-Engine sowie Flatpak-Integration.
-- **Virtualisierung**: First-Class-Unterstützung für Oracle VirtualBox (VMSVGA) und VMware Workstation (SVGA II) mit dynamischer Auflösung und Shared Clipboard.
-- **Sicherheit**: Erzwingendes AppArmor-Framework und strikte Stateful-Firewall (`nftables`).
-
----
-
-## Kryptografische Prüfsummen
-- **SHA-256**: `{sha256}`
-- **SHA-512**: `{sha512}`
-- **GPG-Signatur**: `{self.output_name}.asc`
-"""
-        rel_notes.write_text(content, encoding="utf-8")
-        print(f"[ISO-BUILDER] Release Notes generiert in: {rel_notes}")
-        return rel_notes
-
-def main() -> int:
-    builder = NovaIsoBuilder()
-    builder.build_iso()
+    builder = NovaIsoBuilder(
+        output_name=args.output_name,
+        kernel=args.kernel,
+        initramfs=args.initramfs,
+        rootfs_dir=args.rootfs_dir,
+        squashfs=args.squashfs,
+    )
+    try:
+        builder.build_iso()
+    except ArtifactError as exc:
+        print(f"[ISO-BUILDER] FEHLER: {exc}", file=sys.stderr)
+        return 1
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 ROOTFS_DIR="$NOVA_ROOT/rootfs"
 INSTALL_DIR="$NOVA_ROOT/install"
 KERNEL_VERSION="${KERNEL_VERSION:-6.12.5}"

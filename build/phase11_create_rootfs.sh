@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 ROOTFS_DIR="$NOVA_ROOT/rootfs"
 DISTRIBUTION="${DISTRIBUTION:-ubuntu}"  # fedora or ubuntu
 RELEASEVER="${RELEASEVER:-24.04}"  # Ubuntu 24.04 LTS
@@ -352,7 +352,7 @@ cleanup() {
     if [ "$DISTRIBUTION" = "fedora" ]; then
         rm -rf "$ROOTFS_DIR/var/cache/dnf"
     elif [ "$DISTRIBUTION" = "ubuntu" ]; then
-        rm -rf "$ROOTFS_DIR/var/cache/apt
+        rm -rf "$ROOTFS_DIR/var/cache/apt"
     fi
 }
 

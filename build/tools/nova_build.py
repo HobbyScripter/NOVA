@@ -24,7 +24,7 @@ from bootstrap.stage0.check_host import validate_host_environment
 from bootstrap.bootstrap_manager import BootstrapManager
 from kernel.scripts.kernel_builder import KernelBuilder
 from repositories.scripts.repo_manager import RepoManager
-from build.tools.nova_iso_builder import NovaIsoBuilder
+from build.tools.nova_iso_builder import NovaIsoBuilder, ArtifactError
 
 class NovaBuildOrchestrator:
     def __init__(self):
@@ -65,6 +65,7 @@ class NovaBuildOrchestrator:
             return False
         info = kb.fetch_latest_stable_version()
         if not kb.install_kernel(info["version"]):
+            print("[BUILD] FEHLER: Kernel-Schritt abgebrochen - kein echtes Kernel-Artefakt.")
             return False
         kb.generate_grub_config()
         print(f"[BUILD] Kernel {info['version']} & GRUB2 erfolgreich vorbereitet.")
@@ -101,8 +102,12 @@ class NovaBuildOrchestrator:
         print(" [SCHRITT 5/6] Bootfähiges Live- & Installer-ISO Image")
         print("=" * 60)
         builder = NovaIsoBuilder()
-        iso = builder.build_iso()
-        print(f"[BUILD] ISO-Image generiert: {iso}")
+        try:
+            iso = builder.build_iso()
+        except ArtifactError as exc:
+            print(f"[BUILD] FEHLER: ISO-Erstellung abgebrochen: {exc}")
+            return False
+        print(f"[BUILD] ISO-Image generiert und verifiziert: {iso}")
         return True
 
     def build_all(self) -> bool:
@@ -127,6 +132,9 @@ class NovaBuildOrchestrator:
         print(f" BUILD ERFOLGREICH ABGESCHLOSSEN (Dauer: {duration}s)")
         print("############################################################")
         return True
+
+    # HINWEIS: 'BUILD ERFOLGREICH' wird nur erreicht, wenn jeder Schritt -"
+    # einschließlich Kernel-Validierung und ISO-Nachverifikation - True liefert."
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="NOVA OS Build Orchestrator")

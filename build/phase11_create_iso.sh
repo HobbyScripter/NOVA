@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 ROOTFS_DIR="$NOVA_ROOT/rootfs"
 INSTALL_DIR="$NOVA_ROOT/install"
 ISO_DIR="$NOVA_ROOT/iso"
@@ -62,9 +62,32 @@ check_prerequisites() {
         exit 1
     fi
 
+    # Echte Artefakte erzwingen: Textplatzhalter dürfen nie in ein ISO gelangen.
+    local kernel_size
+    kernel_size=$(stat -c%s "$INSTALL_DIR/boot/vmlinuz-nova")
+    if [ "$kernel_size" -lt 1000000 ]; then
+        echo_error "Kernel is a placeholder (${kernel_size} Bytes, expected > 1 MB): $INSTALL_DIR/boot/vmlinuz-nova"
+        exit 1
+    fi
+    if ! file -b "$INSTALL_DIR/boot/vmlinuz-nova" | grep -qE "ELF|Linux kernel"; then
+        echo_error "Kernel has no ELF/bzImage signature: $INSTALL_DIR/boot/vmlinuz-nova"
+        exit 1
+    fi
+
     if [ ! -f "$INSTALL_DIR/boot/initramfs-nova.img" ]; then
         echo_error "Initramfs not found: $INSTALL_DIR/boot/initramfs-nova.img"
         echo "Run phase11_generate_initramfs.sh first"
+        exit 1
+    fi
+
+    local initramfs_size
+    initramfs_size=$(stat -c%s "$INSTALL_DIR/boot/initramfs-nova.img")
+    if [ "$initramfs_size" -lt 100000 ]; then
+        echo_error "Initramfs is a placeholder (${initramfs_size} Bytes, expected > 100 kB)"
+        exit 1
+    fi
+    if ! file -b "$INSTALL_DIR/boot/initramfs-nova.img" | grep -qiE "gzip|zstandard|xz|lz4|cpio"; then
+        echo_error "Initramfs has no archive signature: $INSTALL_DIR/boot/initramfs-nova.img"
         exit 1
     fi
 
@@ -144,6 +167,11 @@ create_squashfs() {
 
     local squashfs_size=$(stat -c%s "$ISO_DIR/rootfs.squashfs")
     echo_info "Squashfs size: $squashfs_size bytes"
+
+    if [ "$squashfs_size" -lt 100000 ] || [ "$(head -c4 "$ISO_DIR/rootfs.squashfs")" != "hsqs" ]; then
+        echo_error "SquashFS invalid or too small: $ISO_DIR/rootfs.squashfs"
+        exit 1
+    fi
 }
 
 # Create EFI boot image
@@ -161,16 +189,10 @@ create_efi_boot() {
 create_iso() {
     echo_info "Creating ISO image using xorriso..."
 
-    # Use grub-mkrescue for easier EFI/BIOS hybrid ISO creation
-    grub-mkrescue \
-        --output="$ISO_OUTPUT" \
-        --grub-mkrescue-core="/usr/lib/grub/i386-pc" \
-        --grub-mkrescue-core="/usr/lib/grub/x86_64-efi" \
-        --xorriso="iso_mbr_part_type=0x07" \
-        --xorriso="appended_part_as=ibm" \
-        --xorriso="appended_part_2_gpt_equi=0" \
-        --xorriso="appended_part_as=gpt" \
-        "$ISO_DIR"
+    # grub-mkrescue erzeugt BIOS- und UEFI-Boot gemeinsam (benötigt mtools + xorriso).
+    # Die früheren Optionen --grub-mkrescue-core/--xorriso existieren nicht und
+    # führten zu einem Abbruch vor der eigentlichen ISO-Erzeugung.
+    grub-mkrescue --output="$ISO_OUTPUT" "$ISO_DIR"
 
     # Alternative: pure xorriso (if grub-mkrescue has issues)
     # xorriso -as mkisofs \
@@ -215,11 +237,23 @@ verify_iso() {
 
     echo_info "ISO size: $iso_size_mb MB"
 
-    # Check ISO structure
-    if command -v isoinfo &> /dev/null; then
-        echo_info "ISO contents:"
-        isoinfo -d -i "$ISO_OUTPUT" | head -20
+    if [ "$iso_size" -lt 5000000 ]; then
+        echo_error "ISO too small (${iso_size} Bytes) - build did not include real content"
+        exit 1
     fi
+
+    if ! file -b "$ISO_OUTPUT" | grep -q "ISO 9660"; then
+        echo_error "Not an ISO 9660 image: $ISO_OUTPUT"
+        exit 1
+    fi
+
+    if ! xorriso -indev "$ISO_OUTPUT" -report_el_torito plain 2>/dev/null | grep -q "El Torito"; then
+        echo_error "No El Torito boot information - ISO is not bootable: $ISO_OUTPUT"
+        exit 1
+    fi
+
+    echo_info "ISO boot information:"
+    xorriso -indev "$ISO_OUTPUT" -report_el_torito plain 2>/dev/null | head -12
 
     echo_info "ISO verification complete"
 }

@@ -78,7 +78,7 @@ install_build_tools() {
         libssl-dev
     )
 
-    echo_info "Installiere Pakete: ${build_tools[@]}"
+    echo_info "Installiere Pakete: ${build_tools[*]}"
     apt-get install -y "${build_tools[@]}" | tee -a "$REPORT_FILE"
 
     echo "" >> "$REPORT_FILE"
@@ -111,7 +111,7 @@ install_qt6() {
         qt6-declarative-dev
     )
 
-    echo_info "Installiere Qt 6 Pakete: ${qt6_packages[@]}"
+    echo_info "Installiere Qt 6 Pakete: ${qt6_packages[*]}"
     apt-get install -y "${qt6_packages[@]}" | tee -a "$REPORT_FILE"
 
     echo "" >> "$REPORT_FILE"
@@ -127,7 +127,7 @@ install_wayland() {
         libwlroots-dev
     )
 
-    echo_info "Installiere Wayland Pakete: ${wayland_packages[@]}"
+    echo_info "Installiere Wayland Pakete: ${wayland_packages[*]}"
     apt-get install -y "${wayland_packages[@]}" | tee -a "$REPORT_FILE"
 
     echo "" >> "$REPORT_FILE"
@@ -147,7 +147,7 @@ install_display_libs() {
         libgbm-dev
     )
 
-    echo_info "Installiere Display-Libraries: ${display_libs[@]}"
+    echo_info "Installiere Display-Libraries: ${display_libs[*]}"
     apt-get install -y "${display_libs[@]}" | tee -a "$REPORT_FILE"
 
     echo "" >> "$REPORT_FILE"
@@ -162,7 +162,7 @@ install_vulkan() {
         vulkan-tools
     )
 
-    echo_info "Installiere Vulkan Pakete: ${vulkan_packages[@]}"
+    echo_info "Installiere Vulkan Pakete: ${vulkan_packages[*]}"
     apt-get install -y "${vulkan_packages[@]}" | tee -a "$REPORT_FILE"
 
     echo "" >> "$REPORT_FILE"
@@ -186,7 +186,7 @@ install_system_tools() {
         shellcheck
     )
 
-    echo_info "Installiere System-Tools: ${system_tools[@]}"
+    echo_info "Installiere System-Tools: ${system_tools[*]}"
     apt-get install -y "${system_tools[@]}" | tee -a "$REPORT_FILE"
 
     echo "" >> "$REPORT_FILE"

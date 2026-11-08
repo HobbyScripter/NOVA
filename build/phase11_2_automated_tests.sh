@@ -4,9 +4,9 @@
 
 set -e
 
-# Configuration
-# Use Windows-style path for WSL/Windows environment
-NOVA_ROOT="${NOVA_ROOT:-D:/Development/Systeme/NOVA}"
+# Standard: Projektwurzel relativ zum Skript (funktioniert unter Linux und Windows).
+# Kann per Umgebungsvariable NOVA_ROOT überschrieben werden.
+NOVA_ROOT="${NOVA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 TEST_LOG="$NOVA_ROOT/phase11_2_test_results.log"
 
 # Colors for output
@@ -66,8 +66,11 @@ test_shellcheck() {
         fi
 
         echo_info "Checking $script..."
-        if shellcheck "$script" &>> "$TEST_LOG"; then
-            echo_info "  ✓ Syntax OK"
+        # Vollständige Analyse ins Log schreiben (Warnungen bleiben dokumentiert),
+        # aber nur Fehler der Ebene 'error' gelten als Syntaxfehler.
+        shellcheck "$script" &>> "$TEST_LOG" || true
+        if shellcheck -S error "$script" >/dev/null 2>&1; then
+            echo_info "  ✓ Syntax OK (keine ShellCheck-Fehler)"
         else
             echo_error "  ✗ Syntax errors found"
             failed=1
@@ -76,8 +79,10 @@ test_shellcheck() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 1: PASSED"
+        return 0
     else
         echo_error "Test 1: FAILED"
+        return 1
     fi
 }
 
@@ -111,8 +116,10 @@ test_executability() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 2: PASSED"
+        return 0
     else
         echo_error "Test 2: FAILED"
+        return 1
     fi
 }
 
@@ -171,8 +178,10 @@ test_kernel_error_handling() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 3: PASSED"
+        return 0
     else
         echo_error "Test 3: FAILED"
+        return 1
     fi
 }
 
@@ -239,8 +248,10 @@ test_rootfs_error_handling() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 4: PASSED"
+        return 0
     else
         echo_error "Test 4: FAILED"
+        return 1
     fi
 }
 
@@ -283,8 +294,10 @@ test_initramfs_permissions() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 5: PASSED"
+        return 0
     else
         echo_error "Test 5: FAILED"
+        return 1
     fi
 }
 
@@ -335,8 +348,10 @@ test_iso_grub_config() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 6: PASSED"
+        return 0
     else
         echo_error "Test 6: FAILED"
+        return 1
     fi
 }
 
@@ -387,8 +402,10 @@ test_distribution_agnostic() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 7: PASSED"
+        return 0
     else
         echo_error "Test 7: FAILED"
+        return 1
     fi
 }
 
@@ -417,8 +434,10 @@ test_documentation() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 8: PASSED"
+        return 0
     else
         echo_error "Test 8: FAILED"
+        return 1
     fi
 }
 
@@ -469,8 +488,10 @@ test_kernel_config() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 9: PASSED"
+        return 0
     else
         echo_error "Test 9: FAILED"
+        return 1
     fi
 }
 
@@ -505,8 +526,10 @@ test_release_version() {
 
     if [ $failed -eq 0 ]; then
         echo_info "Test 10: PASSED"
+        return 0
     else
         echo_error "Test 10: FAILED"
+        return 1
     fi
 }
 
