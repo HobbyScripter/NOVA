@@ -30,9 +30,13 @@ echo "=== Phase 11.6 Stufe 4: Initramfs $(date -Is) ==="
 [ -d "$KMOD" ] || { echo "ABBRUCH: Module fehlen"; echo "STAGE4_FEHLER"; exit 4; }
 
 if [ -e "$IMG" ]; then
-  mv "$IMG" "$IMG.vorheriger-build"
-  echo "vorheriges Artefakt gesichert als $(basename "$IMG").vorheriger-build"
+  BAK="$IMG.vorheriger-build-$(date +%Y%m%dT%H%M%S)"
+  mv "$IMG" "$BAK"
+  echo "vorheriges Artefakt gesichert als $(basename "$BAK")"
 fi
+
+# dracut haengt an --logfile an; fuer eine belastbare Fehlerpruefung immer frisch beginnen
+rm -f "$DLOG"
 
 # --- Nur Treiber aufnehmen, die tatsaechlich als Modul existieren ---
 REQ=""

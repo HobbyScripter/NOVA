@@ -1,11 +1,85 @@
-# Git ignore for NOVA OS build artifacts
-target/
-build/output/*.exe
-build/output/*.pdb
-build/output/*.dll
+# ---------------------------------------------------------------------------
+# NOVA OS – Git-Ignore
+#
+# Grundregel: Versioniert wird Quellcode, Konfiguration und Build-Skripten.
+# NICHT versioniert werden erzeugte Artefakte, Kernel-/RootFS-Bäume, Testdaten
+# und alles, was Maschinen-, Netzwerk- oder Host-Informationen enthält.
+# Das Repo ist öffentlich: Serial-Logs (MAC-Adressen, IP-Adressen, Hostnamen),
+# VMware-Disks (komplettes RootFS) und Host-Pfade gehören nicht hinein.
+# ---------------------------------------------------------------------------
+
+# --- Build-Ausgaben --------------------------------------------------------
+# ISOs, Images, kompilierte Programme, Sysroot: alles reproduzierbar.
+build/output/
+build/iso/
+build/profiles/
+
+# --- Kernel- und RootFS-Bäume (mehrere GB Quellen + Objektdateien) ---------
+build/kernel-build/
+build/rootfs*/
+build/sysroot*/
+
+# --- VMware-Testläufe -----------------------------------------------------
+# Die VMDKs enthalten das vollständige RootFS, die Serial-Logs den gesamten
+# Bootverlauf inklusive Adressen und Host-Pfaden (vmrun-Kommandos).
+build/vm-boottest*/
+build/vm-*/
+
+# --- Build- und Testprotokolle -------------------------------------------
+build/*-logs/
+build/*.out
+build/*.log
+build/*.txt
+
+# --- VM- und Datenträgerformate (auch außerhalb von build/) --------------
+*.vmx
+*.vmdk
+*.vmsd
+*.vmsn
+*.vmss
+*.vmxf
+*.nvram
+*.lck/
+*.qcow2
+*.vdi
+*.vhd
+*.vmdk-flat
+
+# --- Binäre Systemimages ------------------------------------------------
+*.iso
+*.img
+*.raw
+*.squashfs
+*.cpio
+*.cpio.gz
+*.cpio.xz
+
+# --- Kernel-Build-Erzeugnisse (falls einmal außerhalb von build/) --------
+*.o
+*.ko
+*.mod
+*.mod.c
+*.cmd
+*.a
+vmlinux
+vmlinuz*
+System.map
+Module.symvers
+modules.order
+.config.old
+*.tar.xz
+
+# --- Python -------------------------------------------------------------
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# --- Rust / C-Cache ----------------------------------------------------
+target/
 .system_generated/
 
+# --- Werkzeuge und Editoren -------------------------------------------
+.vscode/
+*.swp
+*~
